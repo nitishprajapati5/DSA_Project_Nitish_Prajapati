@@ -71,5 +71,5 @@ def update_train_status(request, train_id):
         )
         
         messages.success(request, f"Train {train.train_number} status updated to {new_status}")
-    
-    return redirect('train_board', station_code=train.current_station.code)
+    print(train.current_station.code)
+    return redirect('station_board',train.current_station.code)

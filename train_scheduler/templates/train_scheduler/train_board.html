@@ -1,0 +1,168 @@
+<!-- templates/train_scheduler/train_board.html -->
+{% extends "train_scheduler/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Station Selection -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Select Station:</h2>
+        <div class="flex space-x-4">
+            {% for station in stations %}
+            <a href="{% url 'station_board' station.code %}"
+               class="px-4 py-2 rounded {% if selected_station == station %}bg-blue-600 text-white{% else %}bg-gray-200 hover:bg-gray-300{% endif %}">
+                {{ station.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if selected_station %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Upcoming Trains -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4">Upcoming Trains</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2">Train</th>
+                            <th class="px-4 py-2">Type</th>
+                            <th class="px-4 py-2">Platform</th>
+                            <th class="px-4 py-2">Arrival</th>
+                            <th class="px-4 py-2">Status</th>
+                            <th class="px-4 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for train in upcoming_trains %}
+                        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                            <td class="px-4 py-2">
+                                <div class="font-bold">{{ train.train_number }}</div>
+                                <div class="text-sm text-gray-600">{{ train.name }}</div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 rounded-full text-sm
+                                    {% if train.train_type == 'EXPRESS' %}bg-green-100 text-green-800
+                                    {% elif train.train_type == 'PASSENGER' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ train.get_train_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">{{ train.platform }}</td>
+                            <td class="px-4 py-2">
+                                {{ train.scheduled_arrival|date:"H:i" }}
+                                {% if train.delay_minutes > 0 %}
+                                <div class="text-red-600 text-sm">+{{ train.delay_minutes }}min</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 rounded-full text-sm
+                                    {% if train.status == 'SCHEDULED' %}bg-gray-100 text-gray-800
+                                    {% elif train.status == 'ARRIVING' %}bg-blue-100 text-blue-800
+                                    {% elif train.status == 'AT_STATION' %}bg-green-100 text-green-800
+                                    {% elif train.status == 'DELAYED' %}bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ train.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">
+                                <form method="post" action="{% url 'update_train_status' train.id %}" class="inline">
+                                    {% csrf_token %}
+                                    {% if train.status == 'SCHEDULED' %}
+                                    <button type="submit" name="status" value="ARRIVING"
+                                            class="bg-blue-500 text-white px-2 py-1 rounded text-sm">
+                                        Mark Arriving
+                                    </button>
+                                    {% elif train.status == 'ARRIVING' %}
+                                    <button type="submit" name="status" value="AT_STATION"
+                                            class="bg-green-500 text-white px-2 py-1 rounded text-sm">
+                                        At Station
+                                    </button>
+                                    {% elif train.status == 'AT_STATION' %}
+                                    <button type="submit" name="status" value="DEPARTED"
+                                            class="bg-purple-500 text-white px-2 py-1 rounded text-sm">
+                                        Mark Departed
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-4 text-center text-gray-500">
+                                No upcoming trains scheduled
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Departed Trains -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4">Recently Departed</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2">Train</th>
+                            <th class="px-4 py-2">Type</th>
+                            <th class="px-4 py-2">Platform</th>
+                            <th class="px-4 py-2">Departure</th>
+                            <th class="px-4 py-2">Delay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for train in departed_trains %}
+                        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                            <td class="px-4 py-2">
+                                <div class="font-bold">{{ train.train_number }}</div>
+                                <div class="text-sm text-gray-600">{{ train.name }}</div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 rounded-full text-sm
+                                    {% if train.train_type == 'EXPRESS' %}bg-green-100 text-green-800
+                                    {% elif train.train_type == 'PASSENGER' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ train.get_train_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">{{ train.platform }}</td>
+                            <td class="px-4 py-2">{{ train.actual_departure|date:"H:i" }}</td>
+                            <td class="px-4 py-2">
+                                {% if train.delay_minutes > 0 %}
+                                <span class="text-red-600">+{{ train.delay_minutes }}min</span>
+                                {% else %}
+                                <span class="text-green-600">On time</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                                No departed trains
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center text-gray-500 py-8">
+        Please select a station to view train schedules
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add this at the end of your template for auto-refresh -->
+<script>
+    function refreshBoard() {
+        location.reload();
+    }
+    // Refresh every 30 seconds
+    setInterval(refreshBoard, 30000);
+</script>
+{% endblock %}

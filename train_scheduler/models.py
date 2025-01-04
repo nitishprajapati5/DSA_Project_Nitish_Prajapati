@@ -63,18 +63,20 @@ class Train(models.Model):
 class PriorityTrainQueue:
     def __init__(self):
         self.queue = []
-        self._index = 0  # For maintaining FIFO order within same priority
-    
+        self._index = 0
+    # Added the Logic for Pushing the trains from the Queue once Scheduled
+
     def push(self, train):
-        # Lower number means higher priority
         priority_score = (
-            -train.priority,  # Negative for max-heap behavior
+            -train.priority,
             train.scheduled_arrival,
             self._index
         )
         heapq.heappush(self.queue, (priority_score, train))
         self._index += 1
-    
+
+    # Added the Logic for Popping the trains from the Queue once marked Departed
+
     def pop(self):
         if self.queue:
             return heapq.heappop(self.queue)[1]

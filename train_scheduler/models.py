@@ -1,6 +1,6 @@
 from django.db import models
-from django.utils import timezone
-from datetime import datetime, timedelta
+# from django.utils import timezone
+# from datetime import datetime, timedelta
 import heapq
 
 class TrainStation(models.Model):
@@ -96,3 +96,6 @@ class TrainLog(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.train.name} {self.event_type}"

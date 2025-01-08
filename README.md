@@ -11,7 +11,7 @@ priority. The heap structure ensures efficient, quick access to the
 highest-priority train, enabling dynamic scheduling adjustments in
 real-time.
 
-### **Problem Domain for Train Scheduling System Using Heap Queue**
+### **Problem Domain**
 
 The problem domain for a **Train Scheduling System using Heap Queue**
 revolves around managing the efficient operation of trains within a
